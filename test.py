@@ -32,7 +32,7 @@ def process(response):
 
 component = "sdc-login-user"
 url = "https://" + component + ".herokuapp.com"
-url = "http://localhost:5000"
+# url = "http://localhost:5000"
 print(" >>> Logging in and collecting tokens... (" + url + ")")
 
 
@@ -88,7 +88,7 @@ print(" <<< Token: " + token)
 
 component = "sdc-questionnaires"
 url = "https://" + component + ".herokuapp.com"
-url = "http://localhost:5001"
+# url = "http://localhost:5001"
 print("\n\n *** Testing " + component + " at " + url)
 
 
