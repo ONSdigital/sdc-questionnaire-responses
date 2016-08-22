@@ -62,31 +62,12 @@ questionnaires = [
 def info():
     return """
         </ul>
-            <li>Try POST to <a href="/login">/login</a> or <a href="/code">/code</a></li>
-            <li>Valid email addresses are:
-            florence.nightingale@example.com,
-            chief.boyce@example.com,
-            fireman.sam@example.com and
-            rob.dabank@example.com
-            </li>
-            <li>Valid internet access codes are:
-            abc123,
-            def456,
-            ghi789,
-            jkl012,
-            mno345 and
-            pqr678
-            </li>
-            <li>Make a note of the returned token and pass it in a "token" header for other requests.</li>
-            <li>Try GET or POST to <a href="/profile">/profile</a></li>
-            <li>Then try GET to <a href="/respondent_units">/respondent_units</a> to see the RUs the respondent is associated with.</li>
-            <li>Make a note of the expanded token</li>
-            <li>Then try GET to
-            <a href="/questionnaires">/questionnaires</a> and
-            <a href="/respondents">/respondents</a>
+            <li>Once you have obtained an expanded token from <a href="https://sdc-login-user.herokuapp.com/">https://sdc-login-user.herokuapp.com/</a>...</li>
+            <li>Try GET to
+            <a href="/questionnaires">/questionnaires</a>
             with a ?reference=... query parameter
-            containing the RU ref to retrieve the lists of
-            questionnaires and respondents associated with the specified RU</li>
+            containing the RU ref to retrieve the list of
+            questionnaires associated with the specified RU</li>
         </ul>
         """
 
