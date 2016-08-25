@@ -15,7 +15,7 @@ questionnaires = [
         "survey_id": "023",
         "form_type": "0203",
         "period": "0816",
-        "respondent_unit": "222"
+        "reporting_unit": "222"
     },
     {
         "response_id": "802",
@@ -23,7 +23,7 @@ questionnaires = [
         "survey_id": "023",
         "form_type": "0203",
         "period": "0816",
-        "respondent_unit": "223"
+        "reporting_unit": "223"
     },
     {
         "response_id": "803",
@@ -31,7 +31,7 @@ questionnaires = [
         "survey_id": "023",
         "form_type": "0203",
         "period": "0816",
-        "respondent_unit": "224"
+        "reporting_unit": "224"
     },
     {
         "response_id": "804",
@@ -39,7 +39,7 @@ questionnaires = [
         "survey_id": "023",
         "form_type": "0102",
         "period": "0816",
-        "respondent_unit": "222"
+        "reporting_unit": "222"
     },
     {
         "response_id": "805",
@@ -47,7 +47,7 @@ questionnaires = [
         "survey_id": "023",
         "form_type": "0102",
         "period": "0816",
-        "respondent_unit": "223"
+        "reporting_unit": "223"
     },
     {
         "response_id": "806",
@@ -55,7 +55,7 @@ questionnaires = [
         "survey_id": "023",
         "form_type": "0102",
         "period": "0816",
-        "respondent_unit": "224"
+        "reporting_unit": "224"
     }
 ]
 
@@ -82,19 +82,19 @@ def questionnaire_entries():
     # print(reference)
     # print(repr(data))
 
-    if data and "respondent_id" in data and "respondent_units" in data:
-        for respondent_unit in data["respondent_units"]:
-            # print(respondent_unit["reference"] + " == " + reference)
-            if respondent_unit["reference"] == reference:
-                respondent_unit["questionnaires"] = []
+    if data and "respondent_id" in data and "reporting_units" in data:
+        for reporting_unit in data["reporting_units"]:
+            # print(reporting_unit["reference"] + " == " + reference)
+            if reporting_unit["reference"] == reference:
+                reporting_unit["questionnaires"] = []
                 for questionnaire in questionnaires:
-                    if questionnaire["respondent_unit"] == reference:
-                        respondent_unit["questionnaires"].append(questionnaire)
-                return jsonify({"questionnaires": respondent_unit["questionnaires"], "token": encode(data)})
+                    if questionnaire["reporting_unit"] == reference:
+                        reporting_unit["questionnaires"].append(questionnaire)
+                return jsonify({"questionnaires": reporting_unit["questionnaires"], "token": encode(data)})
             else:
                 return unauthorized("Unable to find respondent unit for " + reference)
     return known_error("Please provide a 'token' header containing a JWT with a respondent_id value "
-                       "and one or more respondent_unit entries "
+                       "and one or more reporting_unit entries "
                        "and a query parameter 'reference' identifying the unit you wish to get questionnaires for.")
 
 

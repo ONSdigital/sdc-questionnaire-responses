@@ -73,13 +73,13 @@ print(" <<< Token: " + token)
 
 # Respondent units the respondent is associated with
 
-respondent_units = []
-uri = "/respondent_units"
+reporting_units = []
+uri = "/reporting_units"
 result = get(url + uri, headers={"token": token})
 if result["status"] == 200:
     json = result["json"]
     token = json["token"]
-    respondent_units = json["respondent_units"]
+    reporting_units = json["reporting_units"]
 else:
     print("Error: " + str(result["status"]) + " - " + repr(result["text"]))
 
@@ -94,16 +94,16 @@ print("\n\n *** Testing " + component + " at " + url)
 
 # Display the data we'll be working with
 
-for respondent_unit in respondent_units:
-    print(" --- RU " + dumps(respondent_unit))
+for reporting_unit in reporting_units:
+    print(" --- RU " + dumps(reporting_unit))
 
 
 # Questionnaires for the respondent unit
 
 uri = "/questionnaires"
-if len(respondent_units) > 0:
+if len(reporting_units) > 0:
     print("\n --- " + uri + " ---")
-    reference = respondent_units[0]["reference"]
+    reference = reporting_units[0]["reference"]
     print(" >>> RU ref: " + repr(reference))
     parameters = {"reference": reference}
     result = get(url + uri, parameters=parameters, headers={"token": token})
