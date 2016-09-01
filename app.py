@@ -102,7 +102,7 @@ def questionnaire_entries():
 def unauthorized(error=None):
     app.logger.error("Unauthorized: '%s'", request.data.decode('UTF8'))
     message = {
-        'status': 401,
+        # 'status': 401,
         'message': "{}: {}".format(error, request.url),
     }
     resp = jsonify(message)
@@ -115,7 +115,7 @@ def unauthorized(error=None):
 def known_error(error=None):
     app.logger.error("Bad request: '%s'", request.data.decode('UTF8'))
     message = {
-        'status': 400,
+        # 'status': 400,
         'message': "{}: {}".format(error, request.url),
     }
     resp = jsonify(message)
@@ -128,7 +128,7 @@ def known_error(error=None):
 def unknown_error(error=None):
     app.logger.error("Error: '%s'", request.data.decode('UTF8'))
     message = {
-        'status': 500,
+        # 'status': 500,
         'message': "Internal server error: " + repr(error),
     }
     resp = jsonify(message)
