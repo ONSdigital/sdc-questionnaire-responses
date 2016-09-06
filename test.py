@@ -1,22 +1,95 @@
 import requests
-from json import dumps
+from json import loads, dumps
 from decoder import get_json
+import unittest
+from app import app
+from jose import jwt
+from jwt import encode, JWT_ALGORITHM
+
+login_url = "https://sdc-login-user.herokuapp.com/login"
+organisations_url = "https://sdc-organisations.herokuapp.com/reporting_units"
+
+# Email address options
+# email = "florence.nightingale@example.com"
+# email = "chief.boyce@example.com"
+email = "fireman.sam@example.com"
+# email = "rob.dabank@example.com"
+
+ok = 200
+unauthorized = 401
+
+valid_token = None
+reporting_units = None
 
 
-def get(url, parameters={}, headers={}):
-    response = requests.get(url, params=parameters, headers=headers)
-    return process(response)
+class ComponentTestCase(unittest.TestCase):
 
+    def setUp(self):
+        app.config['TESTING'] = True
+        self.app = app.test_client()
 
-def post(url, json, headers={}):
-    headers["Content-Type"] = "application/json"
-    response = requests.post(url, data=json, headers=headers)
-    return process(response)
+    def tearDown(self):
+        pass
+
+    def test_should_return_unauthorized_for_no_token(self):
+
+        # Given
+        # A request with no "token" header
+
+        # When
+        # We try to get reporting units
+        response = self.app.get("/questionnaires")
+
+        # Then
+        # We should get a bad request status code
+        self.assertEqual(response.status_code, unauthorized)
+
+    def test_should_return_unauthorized_for_invalid_token(self):
+
+        # Given
+        # An invalid token
+        token = jwt.encode({"respondent_id": "111"}, "wrong key", algorithm=JWT_ALGORITHM)
+
+        # When
+        # We try to get reporting units with the token
+        response = self.app.get("/questionnaires", headers={"token": token})
+
+        # Then
+        # We should get an unauthorized status code
+        self.assertEqual(response.status_code, unauthorized)
+
+    def test_should_return_reporting_units_for_valid_token(self):
+        global reporting_units
+        print(reporting_units)
+
+        # Given
+        # A valid token and a valid reporting unit
+        token = valid_token
+        self.assertTrue(len(reporting_units) > 0)
+        reporting_unit = reporting_units[0]
+
+        # When
+        # We try to get reporting units with the token
+        response = self.app.get("/questionnaires",
+                                headers={"token": token},
+                                query_string={"reference": reporting_unit["reference"]})
+
+        # Then
+        # The questionnaires we get back should be for the specified reporting unit.
+        self.assertEqual(response.status_code, ok)
+        string = response.data.decode()
+        json = loads(string)
+        self.assertTrue("questionnaires" in json)
+        questionnaires = json["questionnaires"]
+        self.assertTrue(len(questionnaires) > 0)
+        for questionnaire in json["questionnaires"]:
+            print(questionnaire)
+            self.assertTrue("reporting_unit" in questionnaire)
+            self.assertEqual(reporting_unit["reference"], questionnaire["reporting_unit"])
 
 
 def process(response):
     if response.status_code < 400:
-        #print(response.status_code)
         return {
             "status": response.status_code,
             "json": response.json()
@@ -28,95 +101,59 @@ def process(response):
         }
 
 
-# Test the authentication / authorisation API
-
-component = "sdc-login-user"
-url = "https://" + component + ".herokuapp.com"
-# url = "http://localhost:5000"
-print(" >>> Logging in and collecting tokens... (" + url + ")")
-
-
-# Data we're going to work through
+def get(url, parameters=None, headers=None):
+    if parameters is None:
+        parameters = {}
+    if headers is None:
+        headers = {}
+    response = requests.get(url, params=parameters, headers=headers)
+    return process(response)
 
 
-# Email address options
-
-# email = "florence.nightingale@example.com"
-# email = "chief.boyce@example.com"
-email = "fireman.sam@example.com"
-# email = "rob.dabank@example.com"
-
-
-# Internet access code options
-
-access_code = "abc123"
-# access_code= "def456"
-# access_code= "ghi789"
+def post(url, json, headers=None):
+    if headers is None:
+        headers = {}
+    headers["Content-Type"] = "application/json"
+    response = requests.post(url, data=json, headers=headers)
+    return process(response)
 
 
-token = None
-respondent_id = None
-
-# Accout login
-
-uri = "/login"
-input = {"email": email}
-result = post(url + uri, dumps(input))
-if result["status"] == 200:
-    json = result["json"]
-    token = json["token"]
-else:
-    print("Error: " + str(result["status"]) + " - " + repr(result["text"]))
-
-print(" <<< Token: " + token)
-
-
-# Respondent units the respondent is associated with
-
-reporting_units = []
-uri = "/reporting_units"
-result = get(url + uri, headers={"token": token})
-if result["status"] == 200:
-    json = result["json"]
-    token = json["token"]
-    reporting_units = json["reporting_units"]
-else:
-    print("Error: " + str(result["status"]) + " - " + repr(result["text"]))
-
-print(" <<< Token: " + token)
-
-
-component = "sdc-questionnaires"
-url = "https://" + component + ".herokuapp.com"
-# url = "http://localhost:5001"
-print("\n\n *** Testing " + component + " at " + url)
-
-
-# Display the data we'll be working with
-
-for reporting_unit in reporting_units:
-    print(" --- RU " + dumps(reporting_unit))
-
-
-# Questionnaires for the respondent unit
-
-uri = "/questionnaires"
-if len(reporting_units) > 0:
-    print("\n --- " + uri + " ---")
-    reference = reporting_units[0]["reference"]
-    print(" >>> RU ref: " + repr(reference))
-    parameters = {"reference": reference}
-    result = get(url + uri, parameters=parameters, headers={"token": token})
+def log_in():
+    global valid_token
+    # Account login
+    print(" >>> Logging in and collecting tokens... (" + login_url + ")")
+    message = {"email": email}
+    result = post(login_url, dumps(message))
     if result["status"] == 200:
         json = result["json"]
-        token = json["token"]
-        print(" <<< Token: " + token)
-        content = get_json(token)
-        print("Token content: " + dumps(content, sort_keys=True, indent=4, separators=(',', ': ')))
-        questionnaires = json["questionnaires"]
-        print(" <<< " + str(len(questionnaires)) + " result(s): " + repr(questionnaires))
+        valid_token = json["token"]
     else:
         print("Error: " + str(result["status"]) + " - " + repr(result["text"]))
-else:
-    print(" * No respondent unit to query.")
+    print(" <<< Token      : " + repr(valid_token))
+
+
+def get_reporting_units():
+    global valid_token
+    global reporting_units
+
+    # Reporting units and survey permissions
+    print(" >>> Getting reporting units and survey permissions... (" + organisations_url + ")")
+    message = {"email": email}
+    result = get(organisations_url, headers={"token": valid_token})
+    if result["status"] == 200:
+        json = result["json"]
+        valid_token = json["token"]
+        data = json["data"]
+        reporting_units = data["reporting_units"]
+    else:
+        print("Error: " + str(result["status"]) + " - " + repr(result["text"]))
+    print(" <<< Token      : " + valid_token)
+    print(" <<< Reporting units: " + repr(reporting_units))
+
+
+if __name__ == '__main__':
+    log_in()
+    get_reporting_units()
+    unittest.main()
+
 
