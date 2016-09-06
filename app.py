@@ -2,7 +2,7 @@ import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from jwt import encode, decode
-from jose.exceptions import JWSError
+from jose.exceptions import JWTError
 
 
 app = Flask(__name__)
@@ -82,7 +82,7 @@ def questionnaire_entries():
     # print(reference)
     # print(repr(data))
 
-    if data and "respondent_id" in data and "reporting_units" in data:
+    if data and "respondent_id" in data and "reporting_units" in data and reference:
         for reporting_unit in data["reporting_units"]:
             # print(reporting_unit["reference"] + " == " + reference)
             if reporting_unit["reference"] == reference:
@@ -91,11 +91,9 @@ def questionnaire_entries():
                     if questionnaire["reporting_unit"] == reference:
                         reporting_unit["questionnaires"].append(questionnaire)
                 return jsonify({"questionnaires": reporting_unit["questionnaires"], "token": encode(data)})
-            else:
-                return unauthorized("Unable to find respondent unit for " + reference)
-    return known_error("Please provide a 'token' header containing a JWT with a respondent_id value "
-                       "and one or more reporting_unit entries "
-                       "and a query parameter 'reference' identifying the unit you wish to get questionnaires for.")
+    return unauthorized("Please provide a 'token' header containing a JWT with a respondent_id value "
+                        "and one or more reporting_unit entries "
+                        "and a query parameter 'reference' identifying the unit you wish to get questionnaires for.")
 
 
 @app.errorhandler(401)
@@ -139,7 +137,7 @@ def validate_token(token):
     if token:
         try:
             return decode(token)
-        except JWSError:
+        except JWTError:
             return ""
 
 
