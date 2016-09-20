@@ -14,6 +14,7 @@ organisations_url = "https://sdc-organisations.herokuapp.com/reporting_units"
 # email = "chief.boyce@example.com"
 email = "fireman.sam@example.com"
 # email = "rob.dabank@example.com"
+password = "password"
 
 ok = 200
 unauthorized = 401
@@ -122,7 +123,7 @@ def log_in():
     global valid_token
     # Account login
     print(" >>> Logging in and collecting tokens... (" + login_url + ")")
-    message = {"email": email}
+    message = {"email": email, "password": password}
     result = post(login_url, dumps(message))
     if result["status"] == 200:
         json = result["json"]
@@ -138,7 +139,6 @@ def get_reporting_units():
 
     # Reporting units and survey permissions
     print(" >>> Getting reporting units and survey permissions... (" + organisations_url + ")")
-    message = {"email": email}
     result = get(organisations_url, headers={"token": valid_token})
     if result["status"] == 200:
         json = result["json"]
