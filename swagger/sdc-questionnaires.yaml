@@ -1,0 +1,66 @@
+swagger: '2.0'
+info:
+  title: SDC public user login
+  description: Login service for the SDC public service
+  version: "1.0.0"
+# the domain of the service
+host: sdc-login-user.herokuapp.com
+# array of all schemes that your API supports
+schemes:
+  - https
+basePath: /
+produces:
+  - application/json
+paths:
+  /questionnaires:
+    get:
+      summary: Retrieve the user's to-do list
+      parameters:
+        - name: sdc-token
+          in: header
+          description: A JWT token containing a claim for the user ID and reporting unit/survey associations.
+          type: string
+          required: true
+      responses:
+        200:
+          description: Successful query returns a JWT token that adds the to-do list to the token passed in.
+          schema: 
+            $ref: '#/definitions/Questionnaires'
+        401:
+          description: For any non-error condition where authentication fails, including not providing a user ID in the token header.
+        default:
+          description: Unexpected error
+
+definitions:
+  Questionnaires:
+    description: An updated Json Web Token that includes the user's permissions, plus the content of the JWT as a Json object, for convenience
+    type: object
+    properties:
+      token:
+        type: string
+      questionnaires:
+        $ref: '#/definitions/Data'
+  Data:
+    description: The content of the JWT as a Json object, for convenience
+    type: object
+    properties:
+      reporting_units:
+        type: array
+        items: 
+          $ref: '#/definitions/Questionnaire'
+  Questionnaire:
+    description: Information on a single questionnaire 
+    type: object
+    properties:
+      response_id:
+        type: string
+      reporting_unit:
+        type: string
+      survey_id:
+        type: string
+      name:
+        type: string
+      form_type:
+        type: string
+      period:
+        type: string
