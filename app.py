@@ -15,7 +15,7 @@ questionnaires = [
         "survey_id": "023",
         "form_type": "0203",
         "period": "0816",
-        "reporting_unit": "222"
+        "reporting_unit": "o21"
     },
     {
         "response_id": "802",
@@ -85,7 +85,7 @@ def questionnaire_entries():
     if data and "respondent_id" in data and "reporting_units" in data and reference:
         for reporting_unit in data["reporting_units"]:
             # print(reporting_unit["reference"] + " == " + reference)
-            if reporting_unit["reference"] == reference:
+            if reporting_unit["reporting_unit"] == reference:
                 reporting_unit["questionnaires"] = []
                 for questionnaire in questionnaires:
                     if questionnaire["reporting_unit"] == reference:
@@ -142,5 +142,5 @@ def validate_token(token):
 
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5001))
+    port = int(os.environ.get("PORT", 5006))
     app.run(debug=True, host='0.0.0.0', port=port)
