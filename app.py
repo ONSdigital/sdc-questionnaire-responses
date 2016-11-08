@@ -4,60 +4,43 @@ from flask_cors import CORS
 from jwt import encode, decode
 from jose.exceptions import JWTError
 
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import Column, ForeignKey, Integer, String
 
 app = Flask(__name__)
 CORS(app)
 
-questionnaires = [
-    {
-        "response_id": "801",
-        "name": "Monthly Commodities Inquiry",
-        "survey_id": "023",
-        "form_type": "0203",
-        "period": "0816",
-        "reporting_unit": "o21"
-    },
-    {
-        "response_id": "802",
-        "name": "Monthly Commodities Inquiry",
-        "survey_id": "023",
-        "form_type": "0203",
-        "period": "0816",
-        "reporting_unit": "223"
-    },
-    {
-        "response_id": "803",
-        "name": "Monthly Commodities Inquiry",
-        "survey_id": "023",
-        "form_type": "0203",
-        "period": "0816",
-        "reporting_unit": "224"
-    },
-    {
-        "response_id": "804",
-        "name": "Retail Sales Inquiry",
-        "survey_id": "023",
-        "form_type": "0102",
-        "period": "0816",
-        "reporting_unit": "222"
-    },
-    {
-        "response_id": "805",
-        "name": "Retail Sales Inquiry",
-        "survey_id": "023",
-        "form_type": "0102",
-        "period": "0816",
-        "reporting_unit": "223"
-    },
-    {
-        "response_id": "806",
-        "name": "Retail Sales Inquiry",
-        "survey_id": "023",
-        "form_type": "0102",
-        "period": "0816",
-        "reporting_unit": "224"
-    }
-]
+# Set up the database
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/sdc-questionnaires-responses.db'
+db = SQLAlchemy(app)
+
+# Survey model
+class Survey(db.Model):
+    # Columns
+    id = Column(Integer, primary_key=True)
+    name = Column(String(255))
+    survey_id = Column(String(3))
+    period = Column(String(10))
+    form_type = Column(String(4))
+    reporting_unit = Column(String(20))
+    reporting_unit_name = Column(String(105))
+
+
+    def __init__(self, name=None, survey_id=None, period=None, form_type=None, reporting_unit=None, reporting_unit_name=None):
+        self.name = name
+        self.survey_id = survey_id
+        self.period = period
+        self.form_type = form_type
+        self.reporting_unit = reporting_unit
+        self.reporting_unit_name = reporting_unit_name
+
+    def as_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+
+def create_database():
+    #db.drop_all()
+    db.create_all()
 
 
 @app.route('/', methods=['GET'])
@@ -79,21 +62,20 @@ def questionnaire_entries():
     token = request.headers.get("token")
     data = validate_token(token)
     reference = request.args.get('reference')
-    # print(reference)
-    # print(repr(data))
-
     if data and "respondent_id" in data and "reporting_units" in data and reference:
-        for reporting_unit in data["reporting_units"]:
-            # print(reporting_unit["reference"] + " == " + reference)
-            if reporting_unit["reporting_unit"] == reference:
-                reporting_unit["questionnaires"] = []
-                for questionnaire in questionnaires:
-                    if questionnaire["reporting_unit"] == reference:
-                        reporting_unit["questionnaires"].append(questionnaire)
-                return jsonify({"questionnaires": reporting_unit["questionnaires"], "token": encode(data)})
-    return unauthorized("Please provide a 'token' header containing a JWT with a respondent_id value "
-                        "and one or more reporting_unit entries "
-                        "and a query parameter 'reference' identifying the unit you wish to get questionnaires for.")
+        surveys = (db.session.query(Survey).filter(Survey.reporting_unit == reference).all())
+        result = [dict(su.as_dict()) for su in surveys]
+        return result
+
+
+@app.route('/create-questionnaires', methods=['POST'])
+def create_questionnaires():
+    data = request.get_json()
+    survey = Survey(data['survey_ref'], 'SURVEYID', data['survey_period'], data['form_type'],
+                    data['reporting_unit'], data['reporting_unit_name'])
+    db.session.add(survey)
+    db.session.commit()
+    return jsonify(survey.as_dict())
 
 
 @app.errorhandler(401)
@@ -142,5 +124,10 @@ def validate_token(token):
 
 
 if __name__ == '__main__':
+
+    # Create database
+    create_database()
+
+    # Start server
     port = int(os.environ.get("PORT", 5006))
     app.run(debug=True, host='0.0.0.0', port=port)
