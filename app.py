@@ -61,11 +61,14 @@ def info():
 def questionnaire_entries():
     token = request.headers.get("token")
     data = validate_token(token)
+
     reference = request.args.get('reference')
     if data and "respondent_id" in data and "reporting_units" in data and reference:
         surveys = (db.session.query(Survey).filter(Survey.reporting_unit == reference).all())
-        result = [dict(su.as_dict()) for su in surveys]
-        return result
+        data['surveys'] = [su.as_dict() for su in surveys]
+        token = encode(data)
+        return jsonify({'data': data, 'token': token})
+    return unauthorized("Please provide a 'token' header containing a valid JWT with respondent_id and reporting_units values.")
 
 
 @app.route('/create-questionnaires', methods=['POST'])
