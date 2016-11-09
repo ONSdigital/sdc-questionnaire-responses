@@ -9,6 +9,7 @@ from sqlalchemy import Column, ForeignKey, Integer, String
 
 # service name (initially used for sqlite file name and schema name)
 SERVICE_NAME = 'bsdc-questionnaire-responses'
+ENVIRONMENT_NAME = os.getenv('ENVIRONMENT_NAME', 'dev')
 
 app = Flask(__name__)
 CORS(app)
@@ -17,10 +18,11 @@ CORS(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI', 'sqlite:////tmp/{}.db'.format(SERVICE_NAME))
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+SCHEMA_NAME = None if app.config['SQLALCHEMY_DATABASE_URI'].startswith('sqlite') else '{}_{}'.format(ENVIRONMENT_NAME, SERVICE_NAME)
 
 # Survey model
 class Survey(db.Model):
-    __table_args__ = {'schema': SERVICE_NAME}
+    __table_args__ = {'schema': SCHEMA_NAME}
     # Columns
     id = Column(Integer, primary_key=True)
     name = Column(String(255))
