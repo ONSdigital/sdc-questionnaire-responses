@@ -7,15 +7,20 @@ from jose.exceptions import JWTError
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Column, ForeignKey, Integer, String
 
+# service name (initially used for sqlite file name and schema name)
+SERVICE_NAME = 'bsdc-questionnaire-responses'
+
 app = Flask(__name__)
 CORS(app)
 
 # Set up the database
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI','sqlite:////tmp/sdc-questionnaire-responses.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI', 'sqlite:////tmp/{}.db'.format(SERVICE_NAME))
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 # Survey model
 class Survey(db.Model):
+    __table_args__ = {'schema': SERVICE_NAME}
     # Columns
     id = Column(Integer, primary_key=True)
     name = Column(String(255))
