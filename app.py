@@ -5,7 +5,7 @@ from jwt import encode, decode
 from jose.exceptions import JWTError
 
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import Column, DDL, ForeignKey, Integer, String, event
 
 # service name (initially used for sqlite file name and schema name)
 SERVICE_NAME = 'bsdc-questionnaire-responses'
@@ -47,6 +47,8 @@ class Survey(db.Model):
 
 def create_database():
     #db.drop_all()
+    if SCHEMA_NAME:
+        event.listen(db.Model.metadata, 'before_create', DDL('CREATE SCHEMA IF NOT EXISTS "{}"'.format(SCHEMA_NAME)))
     db.create_all()
 
 
