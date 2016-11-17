@@ -7,6 +7,8 @@ from jose.exceptions import JWTError
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Column, DDL, ForeignKey, Integer, String, event
 
+import typing
+
 # service name (initially used for sqlite file name and schema name)
 SERVICE_NAME = 'bsdc-questionnaire-responses'
 ENVIRONMENT_NAME = os.getenv('ENVIRONMENT_NAME', 'dev')
@@ -45,10 +47,13 @@ class Survey(db.Model):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
 
-def create_database():
-    #db.drop_all()
+def recreate_database():
     if SCHEMA_NAME:
-        event.listen(db.Model.metadata, 'before_create', DDL('CREATE SCHEMA IF NOT EXISTS "{}"'.format(SCHEMA_NAME)))
+        sql = ('DROP SCHEMA IF EXISTS "{0}" CASCADE;'
+               'CREATE SCHEMA IF NOT EXISTS "{0}"'.format(SCHEMA_NAME))
+        event.listen(db.Model.metadata, 'before_create', DDL(sql))
+    else:
+        db.drop_all()
     db.create_all()
 
 
@@ -66,14 +71,13 @@ def info():
         """
 
 
-@app.route('/questionnaires', methods=['GET'])
-def questionnaire_entries():
+@app.route('/questionnaires/<string:reporting_unit_ref>', methods=['GET'])
+def questionnaire_entries(reporting_unit_ref: str):
     token = request.headers.get("token")
     data = validate_token(token)
 
-    reference = request.args.get('reference')
-    if data and "respondent_id" in data and "reporting_units" in data and reference:
-        surveys = (db.session.query(Survey).filter(Survey.reporting_unit == reference).all())
+    if data and 'respondent_id' in data and 'reporting_units' in data:
+        surveys = (db.session.query(Survey).filter(Survey.reporting_unit == reporting_unit_ref).all())
         data['surveys'] = [su.as_dict() for su in surveys]
         token = encode(data)
         return jsonify({'data': data, 'token': token})
@@ -136,9 +140,9 @@ def validate_token(token):
 
 
 if __name__ == '__main__':
-
-    # Create database
-    create_database()
+    # create and populate db only if in main process (Werkzeug also spawns a child process)
+    if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+        recreate_database()
 
     # Start server
     port = int(os.environ.get("PORT", 5006))
