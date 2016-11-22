@@ -5,7 +5,7 @@ from jwt import encode, decode
 from jose.exceptions import JWTError
 
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Column, DDL, ForeignKey, Integer, String, event
+from sqlalchemy import Column, ForeignKey, Integer, String
 
 import typing
 
@@ -21,6 +21,13 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI', 'sq
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 SCHEMA_NAME = None if app.config['SQLALCHEMY_DATABASE_URI'].startswith('sqlite') else '{}_{}'.format(ENVIRONMENT_NAME, SERVICE_NAME)
+
+if os.getenv('SQL_DEBUG') == 'true':
+    import logging
+    import sys
+    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+    logging.getLogger('sqlalchemy.engine').setLevel(logging.DEBUG)
+
 
 # Survey model
 class Survey(db.Model):
@@ -51,7 +58,7 @@ def recreate_database():
     if SCHEMA_NAME:
         sql = ('DROP SCHEMA IF EXISTS "{0}" CASCADE;'
                'CREATE SCHEMA IF NOT EXISTS "{0}"'.format(SCHEMA_NAME))
-        event.listen(db.Model.metadata, 'before_create', DDL(sql))
+        db.engine.execute(sql)
     else:
         db.drop_all()
     db.create_all()
