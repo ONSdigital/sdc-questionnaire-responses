@@ -10,7 +10,7 @@ from sqlalchemy import Column, ForeignKey, Integer, String
 import typing
 
 # service name (initially used for sqlite file name and schema name)
-SERVICE_NAME = 'bsdc-questionnaire-responses'
+SERVICE_NAME = 'sdc-questionnaire-responses'
 ENVIRONMENT_NAME = os.getenv('ENVIRONMENT_NAME', 'dev')
 
 app = Flask(__name__)
