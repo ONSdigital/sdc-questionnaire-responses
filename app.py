@@ -40,15 +40,16 @@ class Survey(db.Model):
     form_type = Column(String(4))
     reporting_unit = Column(String(20))
     reporting_unit_name = Column(String(105))
+    state = Column(String(100))
 
-
-    def __init__(self, name=None, survey_id=None, period=None, form_type=None, reporting_unit=None, reporting_unit_name=None):
+    def __init__(self, name=None, survey_id=None, period=None, form_type=None, reporting_unit=None, reporting_unit_name=None, state=None):
         self.name = name
         self.survey_id = survey_id
         self.period = period
         self.form_type = form_type
         self.reporting_unit = reporting_unit
         self.reporting_unit_name = reporting_unit_name
+        self.state = state
 
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
@@ -95,7 +96,7 @@ def questionnaire_entries(reporting_unit_ref: str):
 def create_questionnaires():
     data = request.get_json()
     survey = Survey(data['survey_ref'], 'SURVEYID', data['survey_period'], data['form_type'],
-                    data['reporting_unit'], data['reporting_unit_name'])
+                    data['reporting_unit'], data['reporting_unit_name'],'LIVE')
     db.session.add(survey)
     db.session.commit()
     return jsonify(survey.as_dict())
