@@ -44,6 +44,8 @@ This endpoint accepts the following message:
 }
 ```
 
+Currently, the survey ID will be set to *SURVEYID* and the state will be set to *LIVE*.
+
 ## Links
 
 Try:
