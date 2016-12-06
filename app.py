@@ -42,10 +42,10 @@ class Survey(db.Model):
     reporting_unit = Column(String(20))
     reporting_unit_name = Column(String(105))
     status = Column(String(100))
-    return_by = Column(String(100))
+    #return_by = Column(String(100))
     primaryAction = Column(String(100))
 
-    def __init__(self, name=None, survey_id=None, period=None, form_type=None, reporting_unit=None, reporting_unit_name=None, status=None, return_by=None, primaryaction=None):
+    def __init__(self, name=None, survey_id=None, period=None, form_type=None, reporting_unit=None, reporting_unit_name=None, status=None, primaryaction=None):
         self.name = name
         self.survey_id = survey_id
         self.period = period
@@ -53,7 +53,7 @@ class Survey(db.Model):
         self.reporting_unit = reporting_unit
         self.reporting_unit_name = reporting_unit_name
         self.status = status
-        self.return_by = return_by
+        #self.return_by = return_by
         self.primaryAction = primaryaction
 
     def as_dict(self):
@@ -101,7 +101,7 @@ def questionnaire_entries(reporting_unit_ref: str):
 def create_questionnaires():
     data = request.get_json()
     survey = Survey(data['survey_ref'], 'SURVEYID', data['survey_period'], data['form_type'],
-                    data['reporting_unit'], data['reporting_unit_name'],'LIVE', data['return_by'], 'Start survey')
+                    data['reporting_unit'], data['reporting_unit_name'],'LIVE', 'Start survey')
     db.session.add(survey)
     db.session.commit()
     return jsonify(survey.as_dict())
