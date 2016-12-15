@@ -36,7 +36,7 @@ class Survey(db.Model):
     # Columns
     id = Column(Integer, primary_key=True)
     name = Column(String(255))
-    survey_id = Column(String(3))
+    survey_id = Column(String(10))
     period = Column(String(10))
     form_type = Column(String(4))
     reporting_unit = Column(String(20))
